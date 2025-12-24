@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>merry christmas my bby</title>
+
+  <link rel="icon" type="image/png" href="secret%20box.png">
+  <link rel="apple-touch-icon" href="secret%20box.png">
+  <meta name="apple-mobile-web-app-title" content="merry christmas my bby">
+
+  <style>
+    :root{
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+
+      --pad-x: clamp(14px, 3vw, 28px);
+      --pad-top: calc(var(--safe-top) + clamp(14px, 2.6vw, 22px));
+      --pad-bottom: calc(var(--safe-bottom) + clamp(14px, 2.8vw, 24px));
+
+      /* gifts + buttons */
+      --gift-box-w: clamp(140px, 16vw, 210px);
+      --open-btn-w: clamp(120px, 13vw, 175px);
+
+      /* requested sizing */
+      --counter-w: clamp(90px, 10vw, 130px);            /* 0/4 smaller half-ish */
+      --back-w: clamp(300px, 24vw, 520px);              /* back ~3x */
+      --close-w: clamp(280px, 40vw, 560px);             /* close ~2x */
+      --secret-footer-w: clamp(520px, 54vw, 980px);     /* open secret footer ~3x */
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; margin:0; }
+    body{
+      background:#000;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      overflow:hidden;
+    }
+
+    /* ===== STAGE ===== */
+    .stage{
+      position:fixed;
+      inset:0;
+      background:#fff;
+      overflow:hidden;
+      isolation:isolate;
+    }
+    .bg{
+      position:absolute; inset:0;
+      background: url("landing-bg.png") center/cover no-repeat;
+      pointer-events:none;
+      z-index:0;
+    }
+
+    /* ===== FX ===== */
+    .fx{
+      position:absolute; inset:0;
+      pointer-events:none;
+      z-index:1;
+      overflow:hidden;
+    }
+    .snowflake{
+      position:absolute;
+      top:-12vh;
+      width: 8px; height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.95);
+      opacity:.75;
+      filter: blur(.15px);
+      animation: snowFall linear infinite;
+      will-change: transform;
+    }
+    @keyframes snowFall{
+      0%   { transform: translate3d(var(--x,0px), -12vh, 0) scale(var(--s,1)); }
+      100% { transform: translate3d(calc(var(--x,0px) + var(--drift,0px)), 112vh, 0) scale(var(--s,1)); }
+    }
+    .sparkle{
+      position:absolute;
+      width: 12px; height: 12px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(255,255,255,.96) 0%, rgba(255,255,255,.35) 44%, rgba(255,255,255,0) 72%);
+      opacity:.6;
+      animation: twinkle 2.3s ease-in-out infinite, drift 7.2s ease-in-out infinite;
+      will-change: transform, opacity;
+    }
+    @keyframes twinkle{
+      0%,100%{ opacity:.18; transform: scale(.8); }
+      50%    { opacity:.92; transform: scale(1.25); }
+    }
+    @keyframes drift{
+      0%   { translate: 0 0; }
+      50%  { translate: 18px -12px; }
+      100% { translate: 0 0; }
+    }
+
+    /* ===== base image/button ===== */
+    img{ max-width:100%; display:block; }
+    .imgbtn{
+      border:0; padding:0; margin:0;
+      background:transparent;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      outline:none;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      position:relative;
+      transform: translateZ(0);
+    }
+    .imgbtn > img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      pointer-events:none;
+      display:block;
+    }
+
+    /* ===== hover grow (buttons) ===== */
+    .hovGrow{ transition: transform .16s ease; will-change: transform; }
+    @media (hover:hover){
+      .hovGrow:hover{ transform: scale(1.06); }
+    }
+    .hovGrow:active{ transform: scale(.99); }
+
+    /* ===== float animations ===== */
+    @keyframes floatA{
+      0%{ transform: translateY(0) rotate(var(--tilt,0deg)); }
+      50%{ transform: translateY(-14px) rotate(calc(var(--tilt,0deg) + .6deg)); }
+      100%{ transform: translateY(0) rotate(var(--tilt,0deg)); }
+    }
+    @keyframes floatB{
+      0%{ transform: translateY(0); }
+      50%{ transform: translateY(-10px); }
+      100%{ transform: translateY(0); }
+    }
+
+    /* ===== screens ===== */
+    .screen{
+      position:absolute;
+      inset:0;
+      z-index:2;
+      padding:
+        var(--pad-top)
+        calc(var(--pad-x) + var(--safe-right))
+        var(--pad-bottom)
+        calc(var(--pad-x) + var(--safe-left));
+      min-height:0;
+    }
+    .hidden{ display:none !important; }
+
+    /* =========================
+       LANDING (ทุกอย่างอยู่ครบ + ไม่ซ้อน)
+       ========================= */
+    #screenLanding{
+      display:grid;
+      grid-template-rows: auto 1fr auto;
+      gap: clamp(14px, 3vw, 22px);
+      align-items:center;
+    }
+    #landingTop{ display:flex; justify-content:center; }
+    #landingXmas{ width:min(900px, 94vw); }
+
+    #landingCenter{ display:flex; justify-content:center; align-items:center; }
+    #btnStart{
+      width:min(660px, 92vw); /* click here ใหญ่ขึ้นนิด */
+      aspect-ratio: 420 / 210;
+    }
+
+    #landingBottom{
+      position:relative;
+      min-height: clamp(120px, 18vh, 210px);
+      display:flex;
+      justify-content:center;
+      align-items:flex-end;
+    }
+    #landingLogo{
+      width:min(330px, 70vw);
+      display:none;
+      opacity:.98;
+    }
+    #landingSnowman{
+      position:absolute;
+      right: calc(10px + var(--safe-right));
+      bottom: calc(10px + var(--safe-bottom));
+      width:min(245px, 32vw); /* snowman ใหญ่ขึ้นนิด */
+      opacity:.98;
+      pointer-events:none;
+      animation: floatB 3.2s ease-in-out infinite;
+    }
+
+    /* =========================
+       GIFTS (โครงเดิม: header / gifts / footer)
+       ========================= */
+    #screenGifts{
+      display:grid;
+      grid-template-rows: auto 1fr auto;
+      gap: clamp(10px, 2vw, 16px);
+      min-height:0;
+      align-items:center;
+    }
+
+    /* header ชิดบนขึ้นแต่ไม่ติดขอบ + เว้นกับกล่อง */
+    #headerArt{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding-top: clamp(2px, .8vw, 8px);
+      padding-bottom: clamp(8px, 1.6vw, 14px);
+    }
+    #headerArt img{
+      width:min(760px, 86vw);
+      height:auto;
+      object-fit:contain;
+      pointer-events:none;
+    }
+
+    /* gift zone (ยกขึ้น + กลาง) */
+    #giftZone{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding: clamp(10px, 2vw, 16px) 0 clamp(28px, 4vw, 56px); /* เว้นกับ footer */
+      min-height:0;
+    }
+
+    /* grid ป้องกันทับกันแน่นอน */
+    #giftGrid{
+      display:grid;
+      grid-template-columns: repeat(4, var(--gift-box-w));
+      justify-content:center;
+      align-items:start;
+      column-gap: clamp(24px, 4.5vw, 70px);  /* เว้นระยะกล่อง */
+      row-gap: clamp(18px, 3vw, 30px);
+    }
+
+    .giftItem{
+      width: var(--gift-box-w);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap: 14px;
+      transform: translate(var(--dx,0px), var(--dy,0px)) rotate(var(--rot,0deg)); /* ดูไม่ตั้งใจ */
+      transform-origin:center;
+    }
+
+    /* กล่องลอยขึ้นลง + เอียง */
+    .giftBoxWrap{
+      width:100%;
+      aspect-ratio:1/1;
+      animation: floatA 4.0s ease-in-out infinite;
+      animation-delay: var(--fd, 0s);
+      --tilt: var(--tilt, 0deg);
+      will-change: transform;
+      filter: drop-shadow(0 12px 26px rgba(0,0,0,.14));
+    }
+    .giftBoxBtn{
+      width:100%;
+      height:100%;
+      transform: rotate(var(--tilt, 0deg)) rotateX(10deg);
+      transform-style:preserve-3d;
+      transition: transform .16s ease;
+    }
+
+    /* hover กล่องหมุนนิดๆ */
+    @media (hover:hover){
+      .giftItem:hover .giftBoxBtn{
+        transform: rotate(calc(var(--tilt, 0deg) + 3.2deg)) rotateX(11deg) translateY(-2px) scale(1.02);
+      }
+    }
+
+    /* ปุ่ม OPEN ลอย + hover ขยาย */
+    .openBtn{
+      width: var(--open-btn-w);
+      aspect-ratio: 200 / 92;
+      animation: floatB 2.7s ease-in-out infinite;
+      animation-delay: var(--od, 0s);
+      z-index:2;
+    }
+    .openBtn::before{
+      content:"";
+      position:absolute;
+      inset:-14px; /* hit area */
+      border-radius: 18px;
+    }
+
+    /* =========================
+       FOOTER (Back + 0/4 ต้องอยู่เสมอ)
+       ========================= */
+    #footerRow{
+      position:relative;
+      display:grid;
+      grid-template-columns: var(--back-w) 1fr var(--back-w);
+      align-items:end;
+      gap: 12px;
+      min-height: 120px;
+      padding-bottom: clamp(2px, .6vw, 6px);
+    }
+
+    #btnBack{
+      width: var(--back-w);
+      aspect-ratio: 200 / 92;
+      justify-self:start;
+    }
+
+    #footerCenter{
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      gap: 16px;
+      width:100%;
+    }
+
+    #openedCounter{
+      width: var(--counter-w);
+      pointer-events:none;
+    }
+    #openedCounter img{ width:100%; height:auto; }
+
+    #btnOpenSecretFooter{
+      width: var(--secret-footer-w);
+      aspect-ratio: 430 / 150;
+      display:none;
+    }
+
+    /* =========================
+       MOBILE
+       ========================= */
+    @media (max-width: 900px){
+      :root{
+        --gift-box-w: clamp(155px, 40vw, 240px);
+        --open-btn-w: clamp(125px, 34vw, 190px);
+        --counter-w: clamp(86px, 22vw, 130px);
+        --back-w: clamp(280px, 74vw, 560px);
+        --secret-footer-w: clamp(420px, 92vw, 900px);
+      }
+      #giftGrid{
+        grid-template-columns: repeat(2, var(--gift-box-w));
+        column-gap: clamp(18px, 5vw, 34px);
+        row-gap: clamp(18px, 5.2vw, 28px);
+      }
+      #footerRow{
+        grid-template-columns: 1fr; /* back แถวเดียว */
+        justify-items:center;
+        gap: 10px;
+      }
+      #btnBack{ justify-self:center; }
+      #footerCenter{ flex-direction:column; gap: 10px; }
+    }
+
+    /* =========================
+       MODAL (Note ใหญ่ขึ้น + animation)
+       ========================= */
+    .modalOverlay{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.62);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:50;
+      padding:
+        calc(12px + var(--safe-top))
+        calc(12px + var(--safe-right))
+        calc(12px + var(--safe-bottom))
+        calc(12px + var(--safe-left));
+    }
+    .modalOverlay.show{ display:flex; }
+
+    .modalCard{
+      position:relative;
+      width:min(1180px, 98vw);      /* NOTE ใหญ่ขึ้น */
+      height:min(92vh, 860px);      /* NOTE ใหญ่ขึ้น */
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      transform: translateY(18px) scale(.96);
+      opacity:0;
+    }
+    .modalOverlay.show .modalCard{
+      animation: modalPop .42s cubic-bezier(.2,.9,.2,1) both;
+    }
+    @keyframes modalPop{
+      0%   { transform: translateY(18px) scale(.96); opacity: 0; }
+      60%  { transform: translateY(-2px) scale(1.01); opacity: 1; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    #modalArt{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      pointer-events:none;
+      display:block;
+      filter: drop-shadow(0 18px 40px rgba(0,0,0,.35));
+    }
+    .modalOverlay.show #modalArt{
+      animation: paperWiggle .55s ease both;
+    }
+    @keyframes paperWiggle{
+      0%   { transform: rotate(-.6deg) scale(.985); }
+      45%  { transform: rotate(.7deg) scale(1.01); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+
+    /* close bigger 2x */
+    #btnCloseModal{
+      position:absolute;
+      left:50%;
+      bottom: 2%;
+      transform: translateX(-50%);
+      width: var(--close-w);
+      aspect-ratio: 190 / 90;
+      z-index: 55;
+      display:none;
+    }
+
+    /* secret overlay with bbox */
+    #secretOverlay{
+      position:absolute;
+      display:none;
+      z-index: 60;
+      pointer-events:none;
+    }
+    #secretOverlay .imgbtn{ pointer-events:auto; }
+
+    /* secret note: เพิ่มระยะห่าง box กับปุ่ม */
+    #secretBoxCenter{
+      position:absolute;
+      left:50%;
+      top:34%;
+      transform: translate(-50%,-50%);
+      width: 28%;
+      aspect-ratio: 1/1;
+      display:none;
+      pointer-events:none;
+      filter: drop-shadow(0 14px 26px rgba(0,0,0,.16));
+    }
+    #btnOpenSecretInModal{
+      position:absolute;
+      left:50%;
+      bottom: 6%;
+      transform: translateX(-50%);
+      width: 66%;
+      aspect-ratio: 520 / 170;
+      display:none;
+    }
+
+    /* secret note 2: เพิ่มระยะห่างด้านบนของปุ่ม (ดันปุ่มลงล่าง) */
+    #btnOkayInModal{
+      position:absolute;
+      left:50%;
+      bottom: 4%;
+      transform: translateX(-50%);
+      width: 56%;
+      aspect-ratio: 360 / 130;
+      display:none;
+    }
+
+    #assetWarning{
+      position:fixed;
+      left: 16px; top: 16px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(0,0,0,.55);
+      color:#fff;
+      font-size: 13px;
+      z-index: 999;
+      display:none;
+      max-width: min(560px, 92vw);
+      line-height: 1.35;
+      pointer-events:none;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="assetWarning"></div>
+
+  <div class="stage" id="stage">
+    <div class="bg"></div>
+    <div class="fx" id="fx"></div>
+
+    <!-- LANDING -->
+    <div class="screen" id="screenLanding">
+      <div id="landingTop">
+        <img id="landingXmas" alt="xmas" />
+      </div>
+
+      <div id="landingCenter">
+        <button class="imgbtn hovGrow" id="btnStart" type="button" aria-label="Start">
+          <img alt="Click here" id="imgClickHere" />
+        </button>
+      </div>
+
+      <div id="landingBottom">
+        <img id="landingLogo" alt="logo" />
+        <img id="landingSnowman" alt="snowman" />
+      </div>
+    </div>
+
+    <!-- GIFTS -->
+    <div class="screen hidden" id="screenGifts">
+      <div id="headerArt"><img alt="Gifts for Kim" id="imgHeader" /></div>
+
+      <div id="giftZone">
+        <div id="giftGrid">
+          <!-- offsets เล็กๆ ให้ดูไม่ตั้งใจ แต่ไม่ทับ -->
+          <div class="giftItem" style="--dx:-10px;--dy:-4px;--rot:-1deg;--tilt:-10deg;--fd:-.6s;--od:-.2s;">
+            <div class="giftBoxWrap">
+              <button class="imgbtn giftBoxBtn" data-action="gift" data-color="green" type="button">
+                <img alt="Green gift" id="imgGiftGreen" />
+              </button>
+            </div>
+            <button class="imgbtn openBtn hovGrow" data-action="open" data-color="green" type="button">
+              <img alt="Open green" id="imgOpenGreen" />
+            </button>
+          </div>
+
+          <div class="giftItem" style="--dx:8px;--dy:6px;--rot:1deg;--tilt:7deg;--fd:-1.2s;--od:-.6s;">
+            <div class="giftBoxWrap" style="animation-duration:4.4s;">
+              <button class="imgbtn giftBoxBtn" data-action="gift" data-color="red" type="button">
+                <img alt="Red gift" id="imgGiftRed" />
+              </button>
+            </div>
+            <button class="imgbtn openBtn hovGrow" data-action="open" data-color="red" type="button">
+              <img alt="Open red" id="imgOpenRed" />
+            </button>
+          </div>
+
+          <div class="giftItem" style="--dx:-6px;--dy:10px;--rot:.8deg;--tilt:-5deg;--fd:-.9s;--od:-.1s;">
+            <div class="giftBoxWrap" style="animation-duration:4.1s;">
+              <button class="imgbtn giftBoxBtn" data-action="gift" data-color="pink" type="button">
+                <img alt="Pink gift" id="imgGiftPink" />
+              </button>
+            </div>
+            <button class="imgbtn openBtn hovGrow" data-action="open" data-color="pink" type="button">
+              <img alt="Open pink" id="imgOpenPink" />
+            </button>
+          </div>
+
+          <div class="giftItem" style="--dx:12px;--dy:-6px;--rot:-.7deg;--tilt:10deg;--fd:-1.5s;--od:-.4s;">
+            <div class="giftBoxWrap" style="animation-duration:4.6s;">
+              <button class="imgbtn giftBoxBtn" data-action="gift" data-color="orange" type="button">
+                <img alt="Orange gift" id="imgGiftOrange" />
+              </button>
+            </div>
+            <button class="imgbtn openBtn hovGrow" data-action="open" data-color="orange" type="button">
+              <img alt="Open orange" id="imgOpenOrange" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="footerRow">
+        <button class="imgbtn hovGrow" id="btnBack" type="button" aria-label="Back">
+          <img alt="Back" id="imgBack" />
+        </button>
+
+        <div id="footerCenter">
+          <div id="openedCounter">
+            <img alt="Opened counter" id="imgCounter" />
+          </div>
+
+          <button class="imgbtn hovGrow" id="btnOpenSecretFooter" type="button" aria-label="Open secret box">
+            <img alt="Open secret box" id="imgOpenSecretFooter" />
+          </button>
+        </div>
+
+        <div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modalOverlay" id="modal" role="dialog" aria-modal="true">
+    <div class="modalCard" id="modalCard">
+      <img alt="Modal content" id="modalArt" />
+
+      <button class="imgbtn hovGrow" id="btnCloseModal" type="button" aria-label="Close">
+        <img alt="Close" id="imgClose" />
+      </button>
+
+      <div id="secretOverlay">
+        <img id="secretBoxCenter" alt="secret box" />
+        <button class="imgbtn hovGrow" id="btnOpenSecretInModal" type="button" aria-label="Open secret box">
+          <img alt="Open secret box" id="imgOpenSecretInModal" />
+        </button>
+        <button class="imgbtn hovGrow" id="btnOkayInModal" type="button" aria-label="Okay">
+          <img alt="Okay" id="imgOkay" />
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const url = (name) => encodeURI(name);
+
+    const ASSETS = {
+      clickHere: "click here.png",
+      xmas: "xmas.png",
+      landingLogo: "merry christmas kim.png", // ถ้าไม่มีไม่เป็นไร
+      snowman: "snowman.png",
+
+      header: "gift for kim.png",
+
+      gifts: {
+        green: "green gift.png",
+        red: "red gift.png",
+        pink: "pink gift.png",
+        orange: "orange gift.png",
+      },
+      openBtns: {
+        green: "green open.png",
+        red: "red open.png",
+        pink: "pink open.png",
+        orange: "orange open.png",
+      },
+      notes: {
+        green: "green note.png",
+        red: "red note.png",
+        pink: "pink note.png",
+        orange: "orange note.png",
+      },
+
+      counter: { 0:"04.png", 1:"14.png", 2:"24.png", 3:"34.png", 4:"44.png" },
+
+      back: "back.png",
+      close: "close.png",
+
+      secretIntro: "secret note.png",
+      secretFinal: "secret note 2.png",
+      openSecret: "open secret box.png",
+      okay: "okay.png",
+      secretBox: "secret box.png",
+    };
+
+    const assetWarning = document.getElementById("assetWarning");
+
+    function setImg(imgEl, filename, silent=false){
+      imgEl.src = url(filename);
+      imgEl.onerror = () => {
+        if(silent){
+          imgEl.style.display = "none";
+          return;
+        }
+        assetWarning.style.display = "block";
+        assetWarning.textContent =
+          "รูปโหลดไม่ขึ้น (เช็คชื่อไฟล์/เว้นวรรค/โฟลเดอร์ให้ตรง)\nMissing: " + filename;
+      };
+      imgEl.onload = () => {
+        if(imgEl.id === "landingLogo") imgEl.style.display = "block";
+      };
+    }
+    async function safeDecode(el){
+      try{ if(el.decode) await el.decode(); }catch(e){}
+    }
+
+    /* ===== FX ===== */
+    const fx = document.getElementById("fx");
+    function makeSnow(count=44){
+      for(let i=0;i<count;i++){
+        const f = document.createElement("div");
+        f.className = "snowflake";
+        const left = Math.random()*100;
+        const size = 4 + Math.random()*9;
+        const dur  = 5.8 + Math.random()*6.8;
+        const delay= -Math.random()*dur;
+        const drift= (Math.random()*2-1) * 46;
+        const op   = 0.18 + Math.random()*0.55;
+        const x    = (Math.random()*2-1) * 24;
+
+        f.style.left = left + "vw";
+        f.style.width = size + "px";
+        f.style.height= size + "px";
+        f.style.opacity = op;
+        f.style.setProperty("--s", (0.75 + Math.random()*0.75).toFixed(2));
+        f.style.setProperty("--drift", drift.toFixed(0) + "px");
+        f.style.setProperty("--x", x.toFixed(0) + "px");
+        f.style.animationDuration = dur.toFixed(2) + "s";
+        f.style.animationDelay = delay.toFixed(2) + "s";
+        fx.appendChild(f);
+      }
+    }
+    function makeSparkles(count=14){
+      for(let i=0;i<count;i++){
+        const s = document.createElement("div");
+        s.className = "sparkle";
+        s.style.left = (Math.random()*100) + "vw";
+        s.style.top  = (Math.random()*100) + "vh";
+        const scale = 0.6 + Math.random()*1.2;
+        s.style.transform = `scale(${scale.toFixed(2)})`;
+        s.style.animationDelay = `${(-Math.random()*2.6).toFixed(2)}s, ${(-Math.random()*7.2).toFixed(2)}s`;
+        fx.appendChild(s);
+      }
+    }
+    makeSnow();
+    makeSparkles();
+
+    /* ===== elements ===== */
+    const screenLanding = document.getElementById("screenLanding");
+    const screenGifts   = document.getElementById("screenGifts");
+    const btnStart      = document.getElementById("btnStart");
+    const btnBack       = document.getElementById("btnBack");
+
+    const imgClickHere  = document.getElementById("imgClickHere");
+    const landingXmas   = document.getElementById("landingXmas");
+    const landingLogo   = document.getElementById("landingLogo");
+    const landingSnowman= document.getElementById("landingSnowman");
+
+    const imgHeader     = document.getElementById("imgHeader");
+    const imgGiftGreen  = document.getElementById("imgGiftGreen");
+    const imgGiftRed    = document.getElementById("imgGiftRed");
+    const imgGiftPink   = document.getElementById("imgGiftPink");
+    const imgGiftOrange = document.getElementById("imgGiftOrange");
+
+    const imgOpenGreen  = document.getElementById("imgOpenGreen");
+    const imgOpenRed    = document.getElementById("imgOpenRed");
+    const imgOpenPink   = document.getElementById("imgOpenPink");
+    const imgOpenOrange = document.getElementById("imgOpenOrange");
+
+    const imgBack       = document.getElementById("imgBack");
+    const imgCounter    = document.getElementById("imgCounter");
+
+    const modal         = document.getElementById("modal");
+    const modalCard     = document.getElementById("modalCard");
+    const modalArt      = document.getElementById("modalArt");
+    const btnCloseModal = document.getElementById("btnCloseModal");
+    const imgClose      = document.getElementById("imgClose");
+
+    const secretOverlay = document.getElementById("secretOverlay");
+    const secretBoxCenter = document.getElementById("secretBoxCenter");
+    const btnOpenSecretInModal = document.getElementById("btnOpenSecretInModal");
+    const imgOpenSecretInModal = document.getElementById("imgOpenSecretInModal");
+    const btnOkayInModal = document.getElementById("btnOkayInModal");
+    const imgOkay        = document.getElementById("imgOkay");
+
+    const btnOpenSecretFooter = document.getElementById("btnOpenSecretFooter");
+    const imgOpenSecretFooter = document.getElementById("imgOpenSecretFooter");
+
+    /* ===== state ===== */
+    const opened = new Set();
+    let pendingSecretAfterClose = false;
+    let secretState = 0; // 0 locked, 1 intro shown, 2 acknowledged
+    let currentModalMode = null;
+    let currentModalFile = null;
+
+    /* ===== render ===== */
+    function render(){
+      const n = Math.min(opened.size, 4);
+
+      const counterWrap = document.getElementById("openedCounter");
+      const showCounter = (n < 4) && (secretState < 2);
+
+      counterWrap.style.display = showCounter ? "block" : "none";
+      if(showCounter) setImg(imgCounter, ASSETS.counter[n], true);
+
+      // หลัง acknowledged ให้โชว์ปุ่มใหญ่ (footer)
+      btnOpenSecretFooter.style.display = (secretState >= 2) ? "flex" : "none";
+
+      // soften opened gifts
+      ["green","red","pink","orange"].forEach(color=>{
+        const isOpened = opened.has(color);
+        document.querySelectorAll(`[data-color="${color}"]`).forEach(btn=>{
+          btn.style.opacity = isOpened ? "0.85" : "1";
+          btn.style.filter  = isOpened ? "grayscale(22%)" : "none";
+        });
+      });
+    }
+
+    /* ===== OPAQUE BBOX (alpha-based) ===== */
+    const bboxCache = new Map();
+    async function getOpaqueBBox(filename){
+      if(bboxCache.has(filename)) return bboxCache.get(filename);
+
+      const img = new Image();
+      img.src = url(filename);
+      await safeDecode(img);
+
+      const nw = img.naturalWidth || 1;
+      const nh = img.naturalHeight || 1;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = nw;
+      canvas.height = nh;
+      const ctx = canvas.getContext("2d", { willReadFrequently:true });
+      ctx.drawImage(img, 0, 0);
+
+      const { data } = ctx.getImageData(0, 0, nw, nh);
+      let minX = nw, minY = nh, maxX = 0, maxY = 0;
+      let found = false;
+      const thr = 12;
+
+      for(let y=0; y<nh; y++){
+        for(let x=0; x<nw; x++){
+          const a = data[(y*nw + x)*4 + 3];
+          if(a > thr){
+            found = true;
+            if(x < minX) minX = x;
+            if(y < minY) minY = y;
+            if(x > maxX) maxX = x;
+            if(y > maxY) maxY = y;
+          }
+        }
+      }
+      if(!found){
+        minX=0; minY=0; maxX=nw-1; maxY=nh-1;
+      }
+
+      const bbox = { minX,minY,maxX,maxY, w:(maxX-minX+1), h:(maxY-minY+1), nw,nh };
+      bboxCache.set(filename, bbox);
+      return bbox;
+    }
+
+    function placeSecretOverlayOnOpaqueBBox(bbox){
+      const artRect = modalArt.getBoundingClientRect();
+      const cardRect = modalCard.getBoundingClientRect();
+
+      const scaleX = artRect.width  / bbox.nw;
+      const scaleY = artRect.height / bbox.nh;
+
+      const left = artRect.left + bbox.minX * scaleX;
+      const top  = artRect.top  + bbox.minY * scaleY;
+      const width  = bbox.w * scaleX;
+      const height = bbox.h * scaleY;
+
+      secretOverlay.style.left = `${left - cardRect.left}px`;
+      secretOverlay.style.top = `${top  - cardRect.top }px`;
+      secretOverlay.style.width = `${width}px`;
+      secretOverlay.style.height = `${height}px`;
+    }
+
+    /* ===== modal ===== */
+    async function openModal(mode, filename){
+      currentModalMode = mode;
+      currentModalFile = filename;
+
+      btnCloseModal.style.display = "none";
+      secretOverlay.style.display = "none";
+      secretBoxCenter.style.display = "none";
+      btnOpenSecretInModal.style.display = "none";
+      btnOkayInModal.style.display = "none";
+
+      // NOTE: ไม่ silent เพื่อเห็น error ถ้าชื่อไฟล์ผิด
+      setImg(modalArt, filename, false);
+      await safeDecode(modalArt);
+
+      modal.classList.add("show");
+
+      if(mode === "giftNote"){
+        btnCloseModal.style.display = "flex";
+        return;
+      }
+
+      if(mode === "secretIntro" || mode === "secretFinal"){
+        const bbox = await getOpaqueBBox(filename);
+        requestAnimationFrame(() => {
+          secretOverlay.style.display = "block";
+          placeSecretOverlayOnOpaqueBBox(bbox);
+
+          if(mode === "secretIntro"){
+            secretBoxCenter.style.display = "block";
+            setImg(secretBoxCenter, ASSETS.secretBox, true);
+            btnOpenSecretInModal.style.display = "flex";
+          }
+          if(mode === "secretFinal"){
+            btnOkayInModal.style.display = "flex";
+          }
+        });
+      }
+    }
+
+    function closeModal(force=false){
+      modal.classList.remove("show");
+      currentModalMode = null;
+      currentModalFile = null;
+
+      // สำคัญ: เปิดครบ 4 แล้ว -> หลังปิดโน้ตใบสุดท้ายให้ขึ้น secret intro
+      if(!force && pendingSecretAfterClose){
+        pendingSecretAfterClose = false;
+        secretState = Math.max(secretState, 1);
+        setTimeout(()=> openModal("secretIntro", ASSETS.secretIntro), 220);
+      }
+    }
+
+    window.addEventListener("resize", async ()=>{
+      if(!modal.classList.contains("show")) return;
+      if(currentModalMode !== "secretIntro" && currentModalMode !== "secretFinal") return;
+      if(!currentModalFile) return;
+      const bbox = await getOpaqueBBox(currentModalFile);
+      placeSecretOverlayOnOpaqueBBox(bbox);
+    });
+
+    /* ===== nav ===== */
+    function showLanding(){
+      closeModal(true);
+      screenLanding.classList.remove("hidden");
+      screenGifts.classList.add("hidden");
+      render();
+    }
+    function showGifts(){
+      closeModal(true);
+      screenLanding.classList.add("hidden");
+      screenGifts.classList.remove("hidden");
+      render();
+    }
+
+    /* ===== interactions ===== */
+    function openGift(color){
+      if(!opened.has(color)) opened.add(color);
+
+      openModal("giftNote", ASSETS.notes[color]);
+      render();
+
+      if(opened.size >= 4 && secretState === 0){
+        pendingSecretAfterClose = true; // รอให้กด close ก่อนแล้วค่อยขึ้น secret note
+      }
+    }
+
+    document.querySelectorAll('[data-action="gift"]').forEach(btn=>{
+      btn.addEventListener("click", (e)=>{ e.preventDefault(); openGift(btn.dataset.color); }, { passive:false });
+    });
+    document.querySelectorAll('[data-action="open"]').forEach(btn=>{
+      btn.addEventListener("click", (e)=>{ e.preventDefault(); openGift(btn.dataset.color); }, { passive:false });
+    });
+
+    btnCloseModal.addEventListener("click", ()=> closeModal(false));
+
+    btnOpenSecretInModal.addEventListener("click", ()=> openModal("secretFinal", ASSETS.secretFinal));
+
+    btnOkayInModal.addEventListener("click", ()=>{
+      secretState = 2;
+      closeModal(true);
+      render();
+    });
+
+    btnOpenSecretFooter.addEventListener("click", ()=> openModal("secretFinal", ASSETS.secretFinal));
+
+    btnStart.addEventListener("click", showGifts);
+    btnBack.addEventListener("click", showLanding);
+
+    /* ===== initial images ===== */
+    setImg(imgClickHere, ASSETS.clickHere);
+    setImg(landingXmas, ASSETS.xmas);
+    setImg(landingSnowman, ASSETS.snowman);
+    setImg(landingLogo, ASSETS.landingLogo, true);
+
+    setImg(imgHeader, ASSETS.header);
+
+    setImg(imgGiftGreen, ASSETS.gifts.green);
+    setImg(imgGiftRed, ASSETS.gifts.red);
+    setImg(imgGiftPink, ASSETS.gifts.pink);
+    setImg(imgGiftOrange, ASSETS.gifts.orange);
+
+    setImg(imgOpenGreen, ASSETS.openBtns.green);
+    setImg(imgOpenRed, ASSETS.openBtns.red);
+    setImg(imgOpenPink, ASSETS.openBtns.pink);
+    setImg(imgOpenOrange, ASSETS.openBtns.orange);
+
+    setImg(imgBack, ASSETS.back);
+    setImg(imgClose, ASSETS.close);
+
+    setImg(imgOpenSecretInModal, ASSETS.openSecret);
+    setImg(imgOpenSecretFooter, ASSETS.openSecret);
+    setImg(imgOkay, ASSETS.okay);
+
+    // preload
+    (function preloadAll(){
+      const list = [
+        ASSETS.clickHere, ASSETS.xmas, ASSETS.snowman, ASSETS.landingLogo,
+        ASSETS.header,
+        ASSETS.gifts.green, ASSETS.gifts.red, ASSETS.gifts.pink, ASSETS.gifts.orange,
+        ASSETS.openBtns.green, ASSETS.openBtns.red, ASSETS.openBtns.pink, ASSETS.openBtns.orange,
+        ASSETS.notes.green, ASSETS.notes.red, ASSETS.notes.pink, ASSETS.notes.orange,
+        ASSETS.counter[0], ASSETS.counter[1], ASSETS.counter[2], ASSETS.counter[3], ASSETS.counter[4],
+        ASSETS.back, ASSETS.close,
+        ASSETS.secretIntro, ASSETS.secretFinal, ASSETS.openSecret, ASSETS.okay, ASSETS.secretBox
+      ];
+      for(const f of list){
+        const im = new Image();
+        im.src = url(f);
+      }
+    })();
+
+    // start
+    render();
+    showLanding();
+  </script>
+</body>
+</html>
