@@ -18,25 +18,31 @@
 
       --pad-x: clamp(14px, 3vw, 28px);
 
+      /* LANDING */
       --xmas-max-h: clamp(320px, 56svh, 720px);
       --click-h: clamp(110px, 18svh, 210px);
       --landing-gap: clamp(10px, 2.2vh, 18px);
 
+      /* GIFTS */
       --gift-box-w: clamp(140px, 16vw, 210px);
       --open-btn-w: clamp(120px, 13vw, 175px);
 
       --counter-w: clamp(80px, 8vw, 120px);
       --back-w: clamp(260px, 22vw, 520px);
 
+      /* header */
       --header-w: min(2600px, 98vw);
       --header-max-h: clamp(160px, 26svh, 360px);
 
+      /* footer */
       --footer-pad: clamp(10px, 2.2vw, 22px);
       --secret-footer-w: clamp(420px, 52vw, 860px);
 
+      /* MODAL */
       --close-w: clamp(170px, 20vw, 260px);
       --note-scale: 1.35;
 
+      /* ปุ่มล่าง modal */
       --modal-btn-open-w: min(720px, 92vw);
       --modal-btn-okay-w: min(520px, 70vw);
     }
@@ -51,19 +57,19 @@
       overflow:hidden;
     }
 
-.stage{
-  position:fixed;
-  inset:0;
-  width:100vw;
+    .stage{
+      position:fixed;
+      inset:0;
+      width:100vw;
 
-  /* ใช้ dvh ก่อน (ใหม่/แม่นสุด) แล้ว fallback เป็น vh */
-  height:100dvh;
-  height:100vh;
+      /* ใช้ dvh ก่อน แล้ว fallback เป็น vh */
+      height:100dvh;
+      height:100vh;
 
-  background:#fff;
-  overflow:hidden;
-  isolation:isolate;
-}
+      background:#fff;
+      overflow:hidden;
+      isolation:isolate;
+    }
 
     .bg{
       position:absolute; inset:0;
@@ -146,6 +152,7 @@
     }
     .hidden{ display:none !important; }
 
+    /* LANDING */
     #screenLanding{
       display:flex;
       align-items:center;
@@ -162,7 +169,6 @@
       gap: var(--landing-gap);
       padding-top: calc(var(--safe-top) + 8px);
       padding-bottom: calc(var(--safe-bottom) + 8px);
-
     }
 
     #landingXmas{
@@ -198,6 +204,7 @@
 
     #landingLogo{ display:none; }
 
+    /* GIFTS */
     #screenGifts{
       padding-top: calc(var(--safe-top) + 6px);
       padding-bottom: 0;
@@ -324,6 +331,7 @@
       z-index: 12;
     }
 
+    /* tablet-ish */
     @media (max-width: 1180px){
       #giftGrid{ grid-template-columns: repeat(2, var(--gift-box-w)); }
     }
@@ -349,6 +357,7 @@
       #btnBack{ justify-self:center; }
     }
 
+    /* MODAL */
     .modalOverlay{
       position:fixed;
       inset:0;
@@ -438,8 +447,9 @@
       border-radius: 30px;
     }
 
+    /* ทำให้ okay เท่าปุ่ม close บน desktop */
     #btnOkayInModal{
-      width: var(--modal-btn-okay-w);
+      width: min(var(--close-w), 92vw);
       aspect-ratio: 190 / 90;
     }
 
@@ -470,6 +480,107 @@
       pointer-events:none;
       white-space: pre-wrap;
     }
+
+    /* 📱 Mobile tweaks: <= 600px */
+    @media (max-width: 600px){
+
+      .stage{
+        overflow-y:auto; /* ถ้าของสูงเกิน ให้เลื่อนใน stage ได้ */
+      }
+
+      .screen{
+        padding:
+          calc(var(--safe-top) + 8px)
+          calc(10px + var(--safe-right))
+          calc(var(--safe-bottom) + 8px)
+          calc(10px + var(--safe-left));
+      }
+
+      /* landing: รูป + ปุ่มเต็มจอแบบกดง่าย */
+      #landingXmas{
+        width: 96vw;
+        max-height: 50svh;
+      }
+
+      #btnStart{
+        max-width: 82vw;
+        height: auto;
+        aspect-ratio: 420 / 210;
+      }
+
+      #landingSnowman{
+        width: 26vw;
+        right: calc(6px + var(--safe-right));
+        bottom: calc(6px + var(--safe-bottom));
+      }
+
+      /* gifts: 1 คอลัมน์ กดง่ายขึ้น */
+      #screenGifts{
+        grid-template-rows: auto 1fr auto;
+        row-gap: 6px;
+      }
+
+      #giftZone{
+        align-items:flex-start;
+        padding-top: 6px;
+      }
+
+      #giftGrid{
+        grid-template-columns: 1fr; /* จาก 4/2 คอลัมน์ → 1 คอลัมน์ */
+        row-gap: 18px;
+      }
+
+      .giftItem{
+        width: 82vw;
+      }
+
+      .giftBoxWrap{
+        max-width: 82vw;
+      }
+
+      .openBtn{
+        width: 72vw;
+      }
+
+      /* footer: counter บน / back ล่าง */
+      #footerRow{
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "mid"
+          "back";
+        justify-items:center;
+        gap: 10px;
+      }
+      #btnBack{
+        justify-self:center;
+      }
+
+      /* modal: ใช้เต็มจอ ปุ่มใหญ่เต็มนิ้ว */
+      .modalCard{
+        width: 100%;
+        height: auto;
+        max-height: 92svh;
+      }
+
+      #artWrap{
+        width: 100%;
+        height: auto;
+        max-height: 70svh;
+      }
+
+      .modalFooter{
+        gap: 8px;
+      }
+
+      .modalActionBtn,
+      #btnCloseModal{
+        width: 92vw;
+      }
+
+      #btnOkayInModal{
+        width: 80vw;
+      }
+    }
   </style>
 </head>
 
@@ -480,6 +591,7 @@
     <div class="bg"></div>
     <div class="fx" id="fx"></div>
 
+    <!-- LANDING -->
     <div class="screen" id="screenLanding">
       <div class="landingWrap">
         <img id="landingXmas" alt="xmas" />
@@ -559,17 +671,16 @@
     </div>
   </div>
 
+  <!-- MODAL -->
   <div class="modalOverlay" id="modal" role="dialog" aria-modal="true">
     <div class="modalCard" id="modalCard">
       <div class="modalBody">
         <div id="artWrap">
           <img alt="Modal content" id="modalArt" />
-
         </div>
       </div>
 
       <div class="modalFooter" id="modalFooter">
-
         <button class="imgbtn hovGrow modalActionBtn" id="btnOpenSecretInModal" type="button" aria-label="Open secret box">
           <img alt="Open secret box" id="imgOpenSecretInModal" />
         </button>
@@ -624,7 +735,6 @@
       secretFinal: "secret note 2.png",
       openSecret: "open secret box.png",
       okay: "okay.png",
- 
     };
 
     const assetWarning = document.getElementById("assetWarning");
@@ -748,13 +858,11 @@
       }
 
       if(mode === "secretIntro"){
-        // ✅ ไม่มี secret box แล้ว เหลือแค่ปุ่ม open secret box ล่าง ๆ
         btnOpenSecretInModal.style.display = "flex";
         return;
       }
 
       if(mode === "secretFinal"){
-        // ✅ OKAY อยู่ล่าง
         btnOkayInModal.style.display = "flex";
         return;
       }
@@ -796,7 +904,7 @@
       }
     }
 
-    /* OPEN */
+    /* OPEN gifts */
     document.addEventListener("pointerup", (e)=>{
       const btn = e.target.closest("[data-action]");
       if(!btn) return;
@@ -805,7 +913,10 @@
       openGift(btn.dataset.color);
     }, { capture:true });
 
-    btnCloseModal.addEventListener("pointerup", (e)=>{ e.preventDefault(); closeModal(false); }, {capture:true});
+    btnCloseModal.addEventListener("pointerup", (e)=>{
+      e.preventDefault();
+      closeModal(false);
+    }, {capture:true});
 
     btnOpenSecretInModal.addEventListener("pointerup", (e)=>{
       e.preventDefault();
@@ -819,10 +930,20 @@
       render();
     }, {capture:true});
 
-    btnOpenSecretFooter.addEventListener("pointerup", (e)=>{ e.preventDefault(); openModal("secretFinal", ASSETS.secretFinal); }, {capture:true});
+    btnOpenSecretFooter.addEventListener("pointerup", (e)=>{
+      e.preventDefault();
+      openModal("secretFinal", ASSETS.secretFinal);
+    }, {capture:true});
 
-    btnStart.addEventListener("pointerup", (e)=>{ e.preventDefault(); showGifts(); }, {capture:true});
-    btnBack.addEventListener("pointerup", (e)=>{ e.preventDefault(); showLanding(); }, {capture:true});
+    btnStart.addEventListener("pointerup", (e)=>{
+      e.preventDefault();
+      showGifts();
+    }, {capture:true});
+
+    btnBack.addEventListener("pointerup", (e)=>{
+      e.preventDefault();
+      showLanding();
+    }, {capture:true});
 
     /* init images */
     setImg(imgClickHere, ASSETS.clickHere);
