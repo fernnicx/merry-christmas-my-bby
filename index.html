@@ -39,11 +39,6 @@
 
       --modal-btn-open-w: min(720px, 92vw);
       --modal-btn-okay-w: min(520px, 70vw);
-
-      /* ✅ Mobile spacing (เพิ่มระยะหายใจเฉพาะมือถือ) */
-      --m-header-gap: clamp(14px, 3.2svh, 26px); /* ใต้ header */
-      --m-footer-gap: clamp(14px, 3.2svh, 28px); /* เหนือ footer + top footer */
-      --m-row-gap:    clamp(10px, 2.4svh, 20px); /* ระยะระหว่าง section */
     }
 
     *{ box-sizing:border-box; }
@@ -56,16 +51,19 @@
       overflow:hidden;
     }
 
-    .stage{
-      position:fixed;
-      inset:0;
-      width:100vw;
-      height:100dvh;
-      height:100vh;
-      background:#fff;
-      overflow:hidden;
-      isolation:isolate;
-    }
+.stage{
+  position:fixed;
+  inset:0;
+  width:100vw;
+
+  /* ใช้ dvh ก่อน (ใหม่/แม่นสุด) แล้ว fallback เป็น vh */
+  height:100dvh;
+  height:100vh;
+
+  background:#fff;
+  overflow:hidden;
+  isolation:isolate;
+}
 
     .bg{
       position:absolute; inset:0;
@@ -148,12 +146,10 @@
     }
     .hidden{ display:none !important; }
 
-    /* ================= LANDING ================= */
     #screenLanding{
       display:flex;
       align-items:center;
       justify-content:center;
-      position:relative;
     }
 
     .landingWrap{
@@ -166,6 +162,7 @@
       gap: var(--landing-gap);
       padding-top: calc(var(--safe-top) + 8px);
       padding-bottom: calc(var(--safe-bottom) + 8px);
+
     }
 
     #landingXmas{
@@ -201,7 +198,6 @@
 
     #landingLogo{ display:none; }
 
-    /* ================= GIFTS ================= */
     #screenGifts{
       padding-top: calc(var(--safe-top) + 6px);
       padding-bottom: 0;
@@ -351,21 +347,8 @@
         gap: 10px;
       }
       #btnBack{ justify-self:center; }
-
-      /* ✅ เพิ่ม padding/ช่องว่างเฉพาะมือถือ: header ↔ gifts ↔ footer */
-      #screenGifts{
-        row-gap: var(--m-row-gap);
-      }
-      #giftZone{
-        padding-top: var(--m-header-gap);
-        padding-bottom: var(--m-footer-gap);
-      }
-      #footerRow{
-        padding-top: var(--m-footer-gap);
-      }
     }
 
-    /* ================= MODAL ================= */
     .modalOverlay{
       position:fixed;
       inset:0;
@@ -581,10 +564,12 @@
       <div class="modalBody">
         <div id="artWrap">
           <img alt="Modal content" id="modalArt" />
+
         </div>
       </div>
 
       <div class="modalFooter" id="modalFooter">
+
         <button class="imgbtn hovGrow modalActionBtn" id="btnOpenSecretInModal" type="button" aria-label="Open secret box">
           <img alt="Open secret box" id="imgOpenSecretInModal" />
         </button>
@@ -639,6 +624,7 @@
       secretFinal: "secret note 2.png",
       openSecret: "open secret box.png",
       okay: "okay.png",
+ 
     };
 
     const assetWarning = document.getElementById("assetWarning");
@@ -762,11 +748,13 @@
       }
 
       if(mode === "secretIntro"){
+        // ✅ ไม่มี secret box แล้ว เหลือแค่ปุ่ม open secret box ล่าง ๆ
         btnOpenSecretInModal.style.display = "flex";
         return;
       }
 
       if(mode === "secretFinal"){
+        // ✅ OKAY อยู่ล่าง
         btnOkayInModal.style.display = "flex";
         return;
       }
