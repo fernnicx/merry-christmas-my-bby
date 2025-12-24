@@ -18,31 +18,25 @@
 
       --pad-x: clamp(14px, 3vw, 28px);
 
-      /* LANDING (เหมือนรูปที่ 2) */
       --xmas-max-h: clamp(320px, 56svh, 720px);
       --click-h: clamp(110px, 18svh, 210px);
       --landing-gap: clamp(10px, 2.2vh, 18px);
 
-      /* GIFTS */
       --gift-box-w: clamp(140px, 16vw, 210px);
       --open-btn-w: clamp(120px, 13vw, 175px);
 
       --counter-w: clamp(80px, 8vw, 120px);
       --back-w: clamp(260px, 22vw, 520px);
 
-      /* ✅ header ใหญ่ขึ้น 4 เท่า (ขยายแบบไม่ล้น) */
       --header-w: min(2600px, 98vw);
       --header-max-h: clamp(160px, 26svh, 360px);
 
-      /* footer */
       --footer-pad: clamp(10px, 2.2vw, 22px);
       --secret-footer-w: clamp(420px, 52vw, 860px);
 
-      /* MODAL */
       --close-w: clamp(170px, 20vw, 260px);
       --note-scale: 1.35;
 
-      /* ✅ ปุ่มล่าง modal */
       --modal-btn-open-w: min(720px, 92vw);
       --modal-btn-okay-w: min(520px, 70vw);
     }
@@ -152,11 +146,7 @@
     }
     .hidden{ display:none !important; }
 
-    /* =========================
-       LANDING (เหมือนรูปที่ 2)
-       ========================= */
     #screenLanding{
-      position:relative;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -172,6 +162,7 @@
       gap: var(--landing-gap);
       padding-top: calc(var(--safe-top) + 8px);
       padding-bottom: calc(var(--safe-bottom) + 8px);
+
     }
 
     #landingXmas{
@@ -207,16 +198,12 @@
 
     #landingLogo{ display:none; }
 
-    /* =========================
-       GIFTS
-       ========================= */
     #screenGifts{
       padding-top: calc(var(--safe-top) + 6px);
       padding-bottom: 0;
       display:grid;
       grid-template-rows: auto 1fr auto;
       min-height:0;
-      position:relative;
     }
 
     #headerArt{
@@ -362,12 +349,6 @@
       #btnBack{ justify-self:center; }
     }
 
-    /* =========================
-       MODAL
-       - ✅ open secret box / okay อยู่ “ข้างล่าง note” เหมือนเดิม
-       - ✅ secret note ไม่โชว์ secret box
-       - ✅ close อยู่ล่าง ไม่ทับ note
-       ========================= */
     .modalOverlay{
       position:fixed;
       inset:0;
@@ -445,7 +426,6 @@
       flex-wrap: wrap;
     }
 
-    /* ✅ ปุ่มล่าง modal (open secret / okay) */
     .modalActionBtn{
       display:none;
       width: var(--modal-btn-open-w);
@@ -500,7 +480,6 @@
     <div class="bg"></div>
     <div class="fx" id="fx"></div>
 
-    <!-- LANDING -->
     <div class="screen" id="screenLanding">
       <div class="landingWrap">
         <img id="landingXmas" alt="xmas" />
@@ -580,18 +559,17 @@
     </div>
   </div>
 
-  <!-- MODAL -->
   <div class="modalOverlay" id="modal" role="dialog" aria-modal="true">
     <div class="modalCard" id="modalCard">
       <div class="modalBody">
         <div id="artWrap">
           <img alt="Modal content" id="modalArt" />
-          <!-- ✅ ลบ secretBoxCenter ออก (ไม่แสดง secret box แล้ว) -->
+
         </div>
       </div>
 
       <div class="modalFooter" id="modalFooter">
-        <!-- ✅ ย้ายปุ่มมาอยู่ข้างล่าง note -->
+
         <button class="imgbtn hovGrow modalActionBtn" id="btnOpenSecretInModal" type="button" aria-label="Open secret box">
           <img alt="Open secret box" id="imgOpenSecretInModal" />
         </button>
@@ -646,7 +624,7 @@
       secretFinal: "secret note 2.png",
       openSecret: "open secret box.png",
       okay: "okay.png",
-      // secretBox: "secret box.png", // ✅ ไม่ใช้แล้ว
+ 
     };
 
     const assetWarning = document.getElementById("assetWarning");
